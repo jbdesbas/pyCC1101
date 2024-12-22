@@ -219,8 +219,8 @@ class CC1101:
         return ret
     
     def reset(self):
-        """Reset chip config"""
-        self.strobe(SRES) # reset
+        """Reset chip config (SRES)"""
+        self.strobe(SRES)
     
     def writeBurst(self, address, data):
         temp = list(data)
