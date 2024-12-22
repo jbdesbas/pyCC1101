@@ -164,7 +164,6 @@ class CC1101:
     def __init__(self, spi, cs, gdo0):
         self.gdo0 = gdo0
         self.device = SPIDevice(spi, cs, baudrate=50000, polarity=0, phase=0)
-        self.strobe(SRES) # reset
     
     def read_register(self, register):
         """Read whole register"""
@@ -218,6 +217,10 @@ class CC1101:
         with self.device as d:
             d.write_readinto(bytearray(databuffer), ret)
         return ret
+    
+    def reset(self):
+        """Reset chip config"""
+        self.strobe(SRES) # reset
     
     def writeBurst(self, address, data):
         temp = list(data)
