@@ -193,10 +193,7 @@ class CC1101:
         return new_value # Applique le masque de suppression et ajoute la nouvelle valeur du paramètre
         
     
-    def writeSingleByte(self, address, byte_data):
-        databuffer = bytearray([WRITE_SINGLE_BYTE | address, byte_data])
-        with self.device as d:
-            d.write(databuffer)
+
     
     def readSingleByte(self, address):
         databuffer = bytearray([READ_SINGLE_BYTE | address, 0x00])
@@ -218,19 +215,24 @@ class CC1101:
             d.write_readinto(bytearray(databuffer), ret)
         return ret
     
-    def reset(self):
-        """Reset chip config (SRES)"""
-        self.strobe(SRES)
-    
     def writeBurst(self, address, data):
         temp = list(data)
         temp.insert(0, (WRITE_BURST | address))
         with self.device as d:
             d.write(bytearray(temp))
     
+    def writeSingleByte(self, address, byte_data):
+        databuffer = bytearray([WRITE_SINGLE_BYTE | address, byte_data])
+        with self.device as d:
+            d.write(databuffer)
+
     def strobe(self, address):
         databuffer = bytearray([address, 0x00])
         with self.device as d:
             d.write(databuffer, end=1)
             d.readinto(databuffer, end=2)
         return databuffer
+
+    def reset(self):
+        """Reset chip config (SRES)"""
+        self.strobe(SRES)
