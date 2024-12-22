@@ -12,8 +12,10 @@ tx = cc1101.CC1101(myspi, cs, gdo0)
 tx.reset()
 
 tx.read_register(cc1101.MDMCFG2)
-
+tx.read_config(cc1101.MDMCFG2, cc1101.DEM_DCFILT_OFF)
 tx.write_config(cc1101.MDMCFG2, cc1101.DEM_DCFILT_OFF, 0b01)
+tx.read_config(cc1101.MDMCFG2, cc1101.DEM_DCFILT_OFF)
+
 tx.read_register(cc1101.MDMCFG2)
 
 tx.reset()

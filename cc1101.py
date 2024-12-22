@@ -171,11 +171,17 @@ class CC1101:
     
     def read_config(self, register, field):
         """Read register and extract field"""
-        pass # TODO
+        if field[0] != register:
+            raise Exception (f'Bad field in register {self.register}. The field must be set for {field[0]} register')
+        reg_ct = self.read_register(register)
+        mask = (1 << (1+field[2] - field[1]) ) - 1
+        return (reg_ct >> field[1]) & mask
     
     def write_config(self, register, field, value):
         """
-        Exemple : register.write(GDO2_INV, 0x00)
+        Write a configuration field into a register.
+        Ensures the field matches the register and verifies that the value is within the allowed range.
+        Example: write_config(IOCFG2, GDO2_INV, 0x00)
         """
         # Check mapping field/register
         if field[0] != register:
@@ -190,10 +196,8 @@ class CC1101:
         suppr_mask = ~suppr_mask & 0xFF # inversion des bits et limite à 8bits
         new_value = (current_value & suppr_mask) | (value << field[1])
         self.writeSingleByte(register, new_value )
-        return new_value # Applique le masque de suppression et ajoute la nouvelle valeur du paramètre
+        #return new_value # Applique le masque de suppression et ajoute la nouvelle valeur du paramètre
         
-    
-
     
     def readSingleByte(self, address):
         databuffer = bytearray([READ_SINGLE_BYTE | address, 0x00])
@@ -236,3 +240,4 @@ class CC1101:
     def reset(self):
         """Reset chip config (SRES)"""
         self.strobe(SRES)
+
