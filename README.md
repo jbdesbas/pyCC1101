@@ -43,5 +43,6 @@ tx.send([0xff, 0x3c, 0b10101010]) # send somes bytes
 - **`frequency`**: Returns or set the current oscillator or transmission frequency (in _Hz_).
 - **`manchester`**: Returns or set Manchester encoding/decoding (_boolean_).
 - **`modulation`**: Returns or set the current modulation used for transmission ( `'2-FSK'`, `'GFSK'`, `'ASK/OOK'`, `'4-FSK'`, `'MSK'` ).
+- **`packet_length`**
 - **`send(data)`**: Emit data. Data must be an array of byte.
 - **`reset()`**: Reset chip registers to factory default values.

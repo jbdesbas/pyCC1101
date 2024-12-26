@@ -332,3 +332,13 @@ class CC1101:
         except KeyError:
             raise Exception(f"Invalid modulation format, must be one of : {' | '.join(self.modulation_map.keys())}")
 
+    @property
+    def packet_length(self):
+        """Get or set packet length (PKTLEN)
+        """
+        return self.read_config(PKTLEN, PACKET_LENGTH)
+    
+    @packet_length.setter
+    def packet_length(self, value):
+        self.write_config(PKTLEN, PACKET_LENGTH, value)
+    
