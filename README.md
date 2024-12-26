@@ -33,12 +33,15 @@ tx.frequency = 868e6 # Set radio frequency to 868MHz
 tx.modulation = '2-FSK' # Frequency Shift Keying (binary) modulation
 
 tx.manchester = True # Enable manchester encoding/decoding
+
+tx.send([0xff, 0x3c, 0b10101010]) # send somes bytes
 ```
 
-## Main methods
+## Main methods and properties
 
 - **`baudrate`**: Returns or set the baud rate for radio transmission (in _Bd_ aka symbols per second).
 - **`frequency`**: Returns or set the current oscillator or transmission frequency (in _Hz_).
 - **`manchester`**: Returns or set Manchester encoding/decoding (_boolean_).
 - **`modulation`**: Returns or set the current modulation used for transmission ( `'2-FSK'`, `'GFSK'`, `'ASK/OOK'`, `'4-FSK'`, `'MSK'` ).
-- **`reset`**: Reset chip registers to factory default values.
+- **`send(data)`**: Emit data. Data must be an array of byte.
+- **`reset()`**: Reset chip registers to factory default values.

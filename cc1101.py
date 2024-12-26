@@ -1,4 +1,5 @@
 from adafruit_bus_device.spi_device import SPIDevice
+from time import sleep
 
 WRITE_SINGLE_BYTE = 0x00
 WRITE_BURST = 0x40
@@ -254,6 +255,15 @@ class CC1101:
     def reset(self):
         """Reset chip config (SRES)"""
         self.strobe(SRES)
+
+    def send(self, data, blocking=True):
+        """Emit data.
+        Data must be a bytearray (eg : bytearray([0b11001100, 245, 0xfc]) or an int array (<256)
+        """
+        self.strobe(SFTX) # Flux TX buffer
+        sleep(0.05)
+        self.writeBurst(TXFIFO, data)
+        # TODO : wait until all transmited if blocking (read buffer)
 
     @property
     def manchester(self):
