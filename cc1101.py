@@ -173,6 +173,7 @@ def baudrate_calculation(f_xosc, drate_e, drate_m):
 
 class CC1101:
     modulation_label = {'2-FSK': FSK2, 'GFSK': GFSK, 'ASK/OOK': ASK_OOK, '4-FSK': FSK4, 'MSK': MSK}
+    packet_config_label = {'fixed': 0x0, 'variable': 0x1, 'infinite':0x2}
     maybe_should_reset = "Maybe you should reset chip by using reset() ?"
 
     def __init__(self, spi, cs, gdo0):
@@ -301,6 +302,21 @@ class CC1101:
 
         self.write_config(MDMCFG4, DRATE_E, drate_e)
         self.write_config(MDMCFG3, DRATE_M, drate_m)
+    
+    @property
+    def length_config(self):
+        register_value = self.read_config(PKTCTRL0, LENGTH_CONFIG)
+        try:
+            return next(key for key, value in self.packet_config_label.items() if value == register_value)
+        except StopIteration:
+            raise Exception(f"{hex(register_value)} : unknown length config. {self.maybe_should_reset}")
+            
+    @length_config.setter
+    def length_config(self, value):
+        try:
+            self.write_config(PKTCTRL0, LENGTH_CONFIG, self.packet_config_label[value])
+        except KeyError:
+            raise Exception(f"Invalid length config, must be one of : {' | '.join(self.packet_config_label.keys())}")
     
     @property
     def frequency(self):
