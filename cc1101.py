@@ -158,11 +158,14 @@ CHANSPC_M = (MDMCFG0, 0, 7)
 # [...]
 
 
-
+def baudrate_calculation(f_xosc, drate_e, drate_m):
+    """ See https://www.ti.com/lit/ds/symlink/cc1101.pdf p.76"""
+    return  ( ((256 + drate_m) * 2**drate_e) /(2**28) ) * f_xosc
     
 class CC1101:
     def __init__(self, spi, cs, gdo0):
         self.gdo0 = gdo0
+        self.f_xosc = 26e6 # 26 MHz
         self.device = SPIDevice(spi, cs, baudrate=50000, polarity=0, phase=0)
     
     def read_register(self, register):
@@ -251,3 +254,29 @@ class CC1101:
     def manchester(self, value: bool):
         self.write_config(MDMCFG2, MANCHESTER_EN, 0b1 if value else 0b0)
 
+    @property
+    def baudrate(self):
+        drate_e = self.read_config(MDMCFG4, DRATE_E)
+        drate_m = self.read_config(MDMCFG3, DRATE_M)
+        return baudrate_calculation(self.f_xosc, drate_e, drate_m)
+
+    @baudrate.setter
+    def baudrate(self, value: int):
+        """Get or set baudrate (baud, Bd).
+        The actual baud rate returned might be slightly different from the requested baud rate
+        due to the constraints of the CC1101's register values and the limited precision
+        of the calculation.
+        """
+        # TODO handle OOB error
+        for e in range(1, 16): # Exponent (4 bits)
+            if baudrate_calculation(self.f_xosc, e, 0) > value :
+                drate_e = e-1
+                break
+
+        for m in range(1, 256): # Mantis (8 bits)
+            if baudrate_calculation(self.f_xosc, drate_e, m) > value :
+                drate_m = m-1
+                break
+
+        self.write_config(MDMCFG4, DRATE_E, drate_e)
+        self.write_config(MDMCFG3, DRATE_M, drate_m)
