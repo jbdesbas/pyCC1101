@@ -157,12 +157,23 @@ CHANSPC_M = (MDMCFG0, 0, 7)
 
 # [...]
 
+# Modulations type
+FSK2 = 0x0
+GFSK = 0x1
+ASK_OOK = 0x3
+FSK4 = 0x4
+MSK = 0x7
+
+
 
 def baudrate_calculation(f_xosc, drate_e, drate_m):
     """ See https://www.ti.com/lit/ds/symlink/cc1101.pdf p.76"""
     return  ( ((256 + drate_m) * 2**drate_e) /(2**28) ) * f_xosc
-    
+
 class CC1101:
+    modulation_label = {'2-FSK': FSK2, 'GFSK': GFSK, 'ASK/OOK': ASK_OOK, '4-FSK': FSK4, 'MSK': MSK}
+    maybe_should_reset = "Maybe you should reset chip by using reset() ?"
+
     def __init__(self, spi, cs, gdo0):
         self.gdo0 = gdo0
         self.f_xosc = 26e6 # 26 MHz
@@ -296,3 +307,18 @@ class CC1101:
         self.writeSingleByte(FREQ1, (x >> 8) & 0xff)
         self.writeSingleByte(FREQ0, x & 0xff)
     
+    @property
+    def modulation(self):
+        register_value = self.read_config(MDMCFG2, MOD_FORMAT)
+        try:
+            return next(key for key, value in self.modulation_label.items() if value == register_value)
+        except StopIteration:
+            raise Exception(f"{hex(register_value)} : unknown modulation type. {self.maybe_should_reset}")
+
+    @modulation.setter
+    def modulation(self, value):
+        try:
+            self.write_config(MDMCFG2, MOD_FORMAT, self.modulation_label[value])
+        except KeyError:
+            raise Exception(f"Invalid modulation format, must be one of : {' | '.join(self.modulation_map.keys())}")
+
