@@ -280,3 +280,19 @@ class CC1101:
 
         self.write_config(MDMCFG4, DRATE_E, drate_e)
         self.write_config(MDMCFG3, DRATE_M, drate_m)
+    
+    @property
+    def frequency(self):
+        """ Get or set radio frequency
+        The step is about 400Hz with a 26 MHz crystal ( fxosc / 2**16 ).
+        """
+        x = (self.readSingleByte(FREQ2) << 16) | (self.readSingleByte(FREQ1) << 8) | (self.readSingleByte(FREQ0))
+        return (self.f_xosc / 2**16) * x
+        
+    @frequency.setter
+    def frequency(self, value):
+        x = round(value / (self.f_xosc / 2**16))
+        self.writeSingleByte(FREQ2, (x >> 16) & 0xff)
+        self.writeSingleByte(FREQ1, (x >> 8) & 0xff)
+        self.writeSingleByte(FREQ0, x & 0xff)
+    
