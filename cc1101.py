@@ -241,3 +241,13 @@ class CC1101:
         """Reset chip config (SRES)"""
         self.strobe(SRES)
 
+    @property
+    def manchester(self):
+        """ Get or set manchester encoding/decoding
+        """
+        return self.read_config(MDMCFG2, MANCHESTER_EN) == 0b1
+
+    @manchester.setter
+    def manchester(self, value: bool):
+        self.write_config(MDMCFG2, MANCHESTER_EN, 0b1 if value else 0b0)
+
