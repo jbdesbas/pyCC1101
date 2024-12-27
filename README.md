@@ -51,6 +51,7 @@ tx.send([0xff, 0x3c, 0b10101010]) # send somes bytes
 ## Main methods and properties
 
 - **`baudrate`**: Returns or set the baud rate for radio transmission (in _Bd_ aka symbols per second).
+- **`deviation`**: Returns or set deviation (in Hz). Affect FSK modulation.
 - **`frequency`**: Returns or set the current oscillator or transmission frequency (in _Hz_).
 - **`length_config`**: Returns or set packet length config ( `'fixed'`, `'variable'`, `'infinite'` ).
 - **`manchester`**: Returns or set Manchester encoding/decoding (_boolean_).

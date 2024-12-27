@@ -156,6 +156,10 @@ CHANSPC_E = (MDMCFG1, 0, 1)
 
 CHANSPC_M = (MDMCFG0, 0, 7)
 
+DEVIATION_E = (DEVIATN, 4, 6)
+DEVIATION_M = (DEVIATN, 0, 2)
+
+
 # [...]
 
 # Modulations type
@@ -170,6 +174,9 @@ MSK = 0x7
 def baudrate_calculation(f_xosc, drate_e, drate_m):
     """ See https://www.ti.com/lit/ds/symlink/cc1101.pdf p.76"""
     return  ( ((256 + drate_m) * 2**drate_e) /(2**28) ) * f_xosc
+
+def deviation_calculation(f_xosc, deviation_e, deviation_m):
+    return (f_xosc / 2**17) * (8+ deviation_m) * (2**deviation_e)
 
 class CC1101:
     modulation_label = {'2-FSK': FSK2, 'GFSK': GFSK, 'ASK/OOK': ASK_OOK, '4-FSK': FSK4, 'MSK': MSK}
@@ -264,6 +271,8 @@ class CC1101:
         self.strobe(SFTX) # Flux TX buffer
         sleep(0.05)
         self.writeBurst(TXFIFO, data)
+        sleep(2)
+        self.strobe(STX)
         # TODO : wait until all transmited if blocking (read buffer)
 
     @property
@@ -302,6 +311,33 @@ class CC1101:
 
         self.write_config(MDMCFG4, DRATE_E, drate_e)
         self.write_config(MDMCFG3, DRATE_M, drate_m)
+    
+    @property
+    def deviation(self):
+        """Get or set deviation (Hz).
+        The actual deviation returned might be slightly different from the requested baud rate
+        due to the constraints of the CC1101's register values and the limited precision
+        of the calculation.
+        """
+        deviation_e = self.read_config(DEVIATN, DEVIATION_E)
+        deviation_m = self.read_config(DEVIATN, DEVIATION_M)
+        return deviation_calculation(self.f_xosc, deviation_e, deviation_m)
+        
+    @deviation.setter
+    def deviation(self, value):
+        # TODO : nested loops and take closest ?
+        for e in range(1, 8): # Exponent (3 bits)
+            if deviation_calculation(self.f_xosc, e, 0) > value :
+                deviation_e = e-1
+                break
+        
+        for m in range(1, 8): # Mantis (3 bits)
+            if deviation_calculation(self.f_xosc, deviation_e, m) > value :
+                deviation_m = m-1
+                break
+        
+        self.write_config(DEVIATN, DEVIATION_E, deviation_e)
+        self.write_config(DEVIATN, DEVIATION_M, deviation_m)
     
     @property
     def length_config(self):
