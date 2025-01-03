@@ -268,12 +268,21 @@ class CC1101:
         """Emit data.
         Data must be a bytearray (eg : bytearray([0b11001100, 245, 0xfc]) or an int array (<256)
         """
-        self.strobe(SFTX) # Flux TX buffer
+        self.strobe(SIDLE)
+        while (self.readSingleByte(MARCSTATE) & 0x1F != 0x01): # wait for CC to enter idle state
+            pass
+
+        self.strobe(SFTX) # flush TX FIFO
         sleep(0.05)
+
         self.writeBurst(TXFIFO, data)
-        sleep(2)
         self.strobe(STX)
-        # TODO : wait until all transmited if blocking (read buffer)
+        sleep(2)         # TODO : wait until all transmited if blocking (read buffer)
+        self.strobe(SFTX)
+        self.strobe(SFRX)
+        sleep(0.05)
+
+
 
     @property
     def manchester(self):
@@ -393,4 +402,90 @@ class CC1101:
     @packet_length.setter
     def packet_length(self, value):
         self.write_config(PKTLEN, PACKET_LENGTH, value)
+        
+    def preset_tx(self):
+        """Apply some config preset for optimized tx"""
+        self.writeBurst(PATABLE, PA_TABLE)      
+        self.writeSingleByte(IOCFG2, 0x29)    #0
+        self.writeSingleByte(IOCFG1, 0x2E)    #0
+        self.writeSingleByte(IOCFG0, 0x06)   #0
+
+        self.writeSingleByte(FSCTRL1, 0x08)  #0 
+        self.writeSingleByte(FSCTRL0, 0x00)   #0    
+             
+        self.write_config(MDMCFG4,CHANBW_E,0b11)
+        self.write_config(MDMCFG4,CHANBW_M,0b11) # Attention baudrate
+
+        #self.writeSingleByte(MDMCFG3, 0x10)   #0 
+        #self.writeSingleByte(MDMCFG2, 0x32)   #0
+        #self.writeSingleByte(MDMCFG1, 0x22)   #0
+        #self.writeSingleByte(MDMCFG0, 0xF8) #0
+
+        #self.writeSingleByte(DEVIATN, 0x00)   #0
+        self.writeSingleByte(MCSM2, 0x07) #0
+        self.writeSingleByte(MCSM1, 0x30) #0    
+        self.writeSingleByte(MCSM0, 0x18) #0
+        self.writeSingleByte(FOCCFG, 0x16) #0 ?
+        self.writeSingleByte(BSCFG, 0x6C) #1 ? # Nécessaire
+
+        self.writeSingleByte(FIFOTHR, 0x47)   #0
+
+        self.writeSingleByte(AGCCTRL2,0x06) # 0 # AGGCTRL Nécessiare
+        self.writeSingleByte(AGCCTRL1,0x00) # 0
+        self.writeSingleByte(AGCCTRL0, 0x95) # 0
+
+        self.writeSingleByte(WORCTRL, 0xFB) #0
+
+        self.writeSingleByte(FREND0, 0x11)  #0
+
+        self.writeSingleByte(FSCAL3, 0xE9) #0
+        self.writeSingleByte(FSCAL2, 0x2A) #0
+        self.writeSingleByte(FSCAL1, 0x00) #0
+        self.writeSingleByte(FSCAL0, 0x1F) #0
+
+        # Bilan : Ces réglages sembles nécessaire.
+        # A voir si possibilité d'améliorer le gain
+    
+    def setupTX(self): # dev
+        self.writeSingleByte(IOCFG2, 0x29)    
+        self.writeSingleByte(IOCFG1, 0x2E)    
+        self.writeSingleByte(IOCFG0, 0x06)    
+        self.writeSingleByte(FIFOTHR, 0x47)   
+        self.writeSingleByte(PKTCTRL1, 0x00)  
+        self.writeSingleByte(PKTCTRL0, 0x00)  
+        self.writeSingleByte(ADDR, 0x00)
+        self.writeSingleByte(CHANNR, 0x00)
+        self.writeSingleByte(FSCTRL1, 0x06)   
+        self.writeSingleByte(FSCTRL0, 0x00)   
+        self.writeSingleByte(MDMCFG4, 0xE7)    
+        self.writeSingleByte(MDMCFG3, 0x10)    
+        self.writeSingleByte(MDMCFG2, 0x30)    #. 32 would be 16/16 sync word bits .#
+        self.writeSingleByte(MDMCFG1, 0x22)   
+        self.writeSingleByte(MDMCFG0, 0xF8)
+        self.writeSingleByte(DEVIATN, 0x15)   
+        self.writeSingleByte(MCSM2, 0x07)
+        self.writeSingleByte(MCSM1, 0x20)     
+        self.writeSingleByte(MCSM0, 0x18)
+        self.writeSingleByte(FOCCFG, 0x14)
+        self.writeSingleByte(BSCFG, 0x6C)
+        self.writeSingleByte(AGCCTRL2, 0x03)  
+        self.writeSingleByte(AGCCTRL1, 0x00)  
+        self.writeSingleByte(AGCCTRL0, 0x92)
+        self.writeSingleByte(WOREVT1, 0x87)
+        self.writeSingleByte(WOREVT0, 0x6B)
+        self.writeSingleByte(WORCTRL, 0xFB)
+        self.writeSingleByte(FREND1, 0x56)    
+        self.writeSingleByte(FREND0, 0x11)    
+        self.writeSingleByte(FSCAL3, 0xE9)
+        self.writeSingleByte(FSCAL2, 0x2A)
+        self.writeSingleByte(FSCAL1, 0x00)
+        self.writeSingleByte(FSCAL0, 0x1F)
+        self.writeSingleByte(RCCTRL1, 0x41)
+        self.writeSingleByte(RCCTRL0, 0x00)
+        self.writeSingleByte(FSTEST, 0x59)
+        self.writeSingleByte(PTEST, 0x7F)   
+        self.writeSingleByte(AGCTEST, 0x3F)
+        self.writeSingleByte(TEST2, 0x81)     
+        self.writeSingleByte(TEST1, 0x35)     
+        self.writeSingleByte(TEST0, 0x0B)
     
