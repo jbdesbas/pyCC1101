@@ -51,6 +51,7 @@ tx.send([0xff, 0x3c, 0b10101010]*10) # send somes bytes
 - **`length_config`**: Returns or set packet length config ( `'fixed'`, `'variable'`, `'infinite'` ).
 - **`manchester`**: Returns or set Manchester encoding/decoding (_boolean_).
 - **`modulation`**: Returns or set the current modulation used for transmission ( `'2-FSK'`, `'GFSK'`, `'ASK/OOK'`, `'4-FSK'`, `'MSK'` ).
+- **`pa_table`**: Returns or set PA_TABLE (8-bytes array)/
 - **`packet_length`**: Returns or set packet length (see `length_config`)
 - **`send(data)`**: Emit data. Data must be an array of byte.
 - **`reset()`**: Reset chip registers to factory default values.

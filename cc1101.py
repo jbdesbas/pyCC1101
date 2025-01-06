@@ -402,7 +402,19 @@ class CC1101:
     @packet_length.setter
     def packet_length(self, value):
         self.write_config(PKTLEN, PACKET_LENGTH, value)
+    
+    @property
+    def pa_table(self):
+        return list(self.readBurst(PATABLE,8-1))
         
+    @pa_table.setter
+    def pa_table(self, value):
+        if len(value) != 8 :
+            raise Exception("PA_TABLE must be a 8-bytes array")
+        if any( (0x61 <= x <= 0x6F) for x in value ) :  # Datasheet p.59
+            raise Exception("PA values between 0x61 and 0x6F are not allowed")
+        self.writeBurst(PATABLE, bytearray(value))
+    
     def preset_tx(self):
         """Apply some config preset for optimized tx"""
         self.writeBurst(PATABLE, PA_TABLE)      
