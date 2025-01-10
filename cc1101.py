@@ -283,7 +283,22 @@ class CC1101:
         sleep(0.05)
 
 
+    @property 
+    def append_status(self):
+        return self.read_config(PKTCTRL1, APPEND_STATUS) == 0b1
+        
+    @append_status.setter
+    def append_status(self, value):
+        self.write_config(PKTCTRL1, APPEND_STATUS, 0b1 if value else 0b0)
 
+    @property
+    def crc(self):
+        return self.read_config(PKTCTRL0, CRC_EN) == 0b1
+        
+    @crc.setter
+    def crc(self, value: bool):
+        self.write_config(PKTCTRL0, CRC_EN, 0b1 if value else 0b0)
+    
     @property
     def manchester(self):
         """ Get or set manchester encoding/decoding
@@ -415,6 +430,24 @@ class CC1101:
             raise Exception("PA values between 0x61 and 0x6F are not allowed")
         self.writeBurst(PATABLE, bytearray(value))
     
+    @property
+    def sync_mode(self):
+        return self.read_config(MDMCFG2, SYNC_MODE)
+        
+    @sync_mode.setter
+    def sync_mode(self, value):
+        if not 0 <= value <= 7:
+            raise ValueError("sync_mode : invalid value {value} (must be in range 0 - 7)")
+        self.write_config(MDMCFG2, SYNC_MODE, value)
+        
+    @property
+    def white_data(self):
+        return self.read_config(PKTCTRL0, WHITE_DATA) == 0b1
+    
+    @white_data.setter
+    def white_data(self, value):
+        self.write_config(PKTCTRL0, WHITE_DATA, 0b1 if value else 0b0)
+    
     def preset_tx(self):
         """Apply some config preset for optimized tx"""
         self.writeBurst(PATABLE, PA_TABLE)      
@@ -448,7 +481,7 @@ class CC1101:
 
         self.writeSingleByte(WORCTRL, 0xFB) #0
 
-        self.writeSingleByte(FREND0, 0x11)  #0
+        self.writeSingleByte(FREND0, 0x11)  #0 voir correspondance pa_table
 
         self.writeSingleByte(FSCAL3, 0xE9) #0
         self.writeSingleByte(FSCAL2, 0x2A) #0

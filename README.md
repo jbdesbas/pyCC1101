@@ -40,13 +40,22 @@ tx.modulation = '2-FSK' # Frequency Shift Keying (binary) modulation
 tx.baudrate = 38400
 tx.preset_tx() # Apply basiC TX preset
 
+# Send only payload
+tx.append_status = False
+tx.white_data = False
+tx.sync_mode = 0
+tx.crc = False
+
+
 tx.send([0xff, 0x3c, 0b10101010]*10) # send somes bytes
 ```
 
 ## Main methods and properties
 
+- **`append_status`**:
 - **`baudrate`**: Returns or set the baud rate for radio transmission (in _Bd_ aka symbols per second).
 - **`deviation`**: Returns or set deviation (in Hz). Affect FSK modulation.
+- **`crc`**:
 - **`frequency`**: Returns or set the current oscillator or transmission frequency (in _Hz_).
 - **`length_config`**: Returns or set packet length config ( `'fixed'`, `'variable'`, `'infinite'` ).
 - **`manchester`**: Returns or set Manchester encoding/decoding (_boolean_).
@@ -54,6 +63,8 @@ tx.send([0xff, 0x3c, 0b10101010]*10) # send somes bytes
 - **`pa_table`**: Returns or set PA_TABLE (8-bytes array)/
 - **`packet_length`**: Returns or set packet length (see `length_config`)
 - **`send(data)`**: Emit data. Data must be an array of byte.
+- **`sync_mode`**:
+- **`white_data`**:
 - **`reset()`**: Reset chip registers to factory default values.
 
 All chip parameters can be accessed using `write_config` or `read_config` (ex : `write_config(PKTCTRL0, WHITE_DATA, 0x1)` ).
