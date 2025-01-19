@@ -1,4 +1,5 @@
-from adafruit_bus_device.spi_device import SPIDevice
+#from adafruit_bus_device.spi_device import SPIDevice
+from machine import SPI
 from time import sleep
 
 WRITE_SINGLE_BYTE = 0x00
@@ -192,8 +193,11 @@ class CC1101:
 
     def __init__(self, spi, cs, gdo0):
         self.gdo0 = gdo0
+        self.cs = cs
+        self.cs.value(1) # Deselect device
         self.f_xosc = 26e6 # 26 MHz
-        self.device = SPIDevice(spi, cs, baudrate=50000, polarity=0, phase=0)
+        spi.init(baudrate=50000, polarity=0, phase=0 )
+        self.device = spi
     
     def read_register(self, register):
         """Read whole register"""
@@ -230,13 +234,15 @@ class CC1101:
         
     
     def readSingleByte(self, address):
-        databuffer = bytearray([READ_SINGLE_BYTE | address, 0x00])
-        
-        with self.device as d:
-            d.write(databuffer, end=1)
-            d.readinto(databuffer, end=2)
-        return databuffer[0]
-    
+        command = bytearray([READ_SINGLE_BYTE | address])
+        try:
+            self.cs.value(0)
+            self.device.write(command)
+            response = self.device.read(1)
+        finally:
+            self.cs.value(1)
+        return int.from_bytes(response)
+
     def readBurst(self, start_address, length):        
         databuffer = []
         ret = bytearray(length+1)
@@ -245,27 +251,39 @@ class CC1101:
             addr = (start_address + (x*8)) | READ_BURST
             databuffer.append(addr)
         
-        with self.device as d:
-            d.write_readinto(bytearray(databuffer), ret)
+        try:
+            self.cs.value(0)
+            self.device.write_readinto(bytearray(databuffer), ret)
+        finally:
+            self.cs.value(1)
         return ret
     
     def writeBurst(self, address, data):
         temp = list(data)
         temp.insert(0, (WRITE_BURST | address))
-        with self.device as d:
-            d.write(bytearray(temp))
+        try:
+            self.cs.value(0)
+            self.device.write(bytearray(temp))
+        finally:
+            self.cs.value(1)
     
     def writeSingleByte(self, address, byte_data):
         databuffer = bytearray([WRITE_SINGLE_BYTE | address, byte_data])
-        with self.device as d:
-            d.write(databuffer)
+        try:
+            self.cs.value(0)
+            self.device.write(databuffer)
+        finally:
+            self.cs.value(1)
 
     def strobe(self, address):
-        databuffer = bytearray([address, 0x00])
-        with self.device as d:
-            d.write(databuffer, end=1)
-            d.readinto(databuffer, end=2)
-        return databuffer
+        command = bytearray([address])
+        try:
+            self.cs.value(0)
+            self.device.write(command)
+            response = self.device.read(1)
+        finally:
+            self.cs.value(1)
+        return response
 
     def reset(self):
         """Reset chip config (SRES)"""
