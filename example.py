@@ -1,12 +1,10 @@
-from digitalio import DigitalInOut
-import busio, board
+from machine import SPI, Pin
+import cc1101
 
-from lib import cc1101
+myspi = SPI(2) # Hardware SPI, MOSI 23, MISO 19, CLK 18
 
-
-myspi = busio.SPI(board.IO18, MOSI=board.IO23, MISO=board.IO19)
-cs = DigitalInOut(board.IO5)
-gdo0 = DigitalInOut(board.IO22)
+cs = Pin(5, mode=Pin.OUT, value=1)
+gdo0 = Pin(22)
 
 tx = cc1101.CC1101(myspi, cs, gdo0)
 
